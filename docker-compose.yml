@@ -1,0 +1,51 @@
+version: "2.0"
+services:
+  app:
+    build:
+      args:
+        user: davicervo
+        uid: 1001
+      context: ./
+      dockerfile: Dockerfile
+    image: davicervo
+    container_name: davicervo-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./src:/var/www
+    networks:
+      - davicervo
+
+  db:
+    image: mysql:5.7
+    container_name: davicervo-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: remax
+      MYSQL_USER: remax
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - davicervo
+    ports:
+      - 3306:3306
+
+  nginx:
+    image: nginx:alpine
+    container_name: davicervo-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./src:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - davicervo
+
+networks:
+  davicervo:
+    driver: bridge
